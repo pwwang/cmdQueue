@@ -9,6 +9,7 @@ Usage
 -----
 
 * Add a job:
+
 	usage: cmdQueue.py add [-h] -n NAME -c CMD
 
 	optional arguments:
@@ -17,6 +18,7 @@ Usage
 	  -c CMD, --cmd CMD
 
 * List workers and jobs:
+
 	$ python cmdQueue.py list
 	! Workers
 	! #   PID    Paused?  StartDate
@@ -40,34 +42,44 @@ Usage
 	8     Test       8288   COMPLETE   0          2014-09-07 03:45:06    2014-09-08 07:49:05    2014-09-08 07:49:25    php -r "sleep(20);"
 
 * Start the queue:
+
 	python cmdQueue.py start
 	
 * Stop the queue:
+
 	python cmdQueue.py stop
 	
 * Restart the queue:
+
 	python cmdQueue.py restart
 	
 * Pause a worker:
+
 	python cmdQueue.py pause -p PID
 	
 * Resume a worker:
+
 	python cmdQueue.py resume -p PID
 	
 * Reset the queue (remove all workers and jobs)
+
 	python cmdQueue.py reset
 	
 * Reset job status (set the status of all jobs to PENDING)
+
 	python cmdQueue.py resetjobs
 	
 * Setup queue (create the database and tables)
+
 	python cmdQueue.py setup
 	
 * Kill jobs
+
 	python cmdQueue.py killjob -p PID
 	python cmdQueue.py killjob2 -i JOBID
 	
 * Kill workers
+
 	python cmdQueue.py killworker -p PID
 
 Start a different queue
@@ -75,12 +87,15 @@ Start a different queue
 Please use a differnt database file to start a different queue
 
 * Temporary way:
+
 	python cmdQueue.py --config db=./another.db SUBCOMMAND ...
 	
 * Using configuration file:
+
 	python cmdQueue.py --config ./another.config SUBCOMMAND ...
 	
 * Configuration file:
+
 	[cmdQueue]
 	db=cmdQueue.db  
 	; the database file    
