@@ -8,7 +8,7 @@ Avaible on windows and *nix (maybe OSX, not tested)
 Usage
 -----
 
-* Add a job:
+#### Add a job:
 
 	usage: cmdQueue.py add [-h] -n NAME -c CMD
 
@@ -17,7 +17,7 @@ Usage
 	  -n NAME, --name NAME
 	  -c CMD, --cmd CMD
 
-* List workers and jobs:
+#### List workers and jobs:
 
 	$ python cmdQueue.py list
 	! Workers
@@ -41,44 +41,44 @@ Usage
 	9     Test       3612   COMPLETE   0          2014-09-07 03:48:32    2014-09-08 07:49:21    2014-09-08 07:49:42    php -r "sleep(20);"
 	8     Test       8288   COMPLETE   0          2014-09-07 03:45:06    2014-09-08 07:49:05    2014-09-08 07:49:25    php -r "sleep(20);"
 
-* Start the queue:
+#### Start the queue:
 
 	python cmdQueue.py start
 	
-* Stop the queue:
+#### Stop the queue:
 
 	python cmdQueue.py stop
 	
-* Restart the queue:
+#### Restart the queue:
 
 	python cmdQueue.py restart
 	
-* Pause a worker:
+#### Pause a worker:
 
 	python cmdQueue.py pause -p PID
 	
-* Resume a worker:
+#### Resume a worker:
 
 	python cmdQueue.py resume -p PID
 	
-* Reset the queue (remove all workers and jobs)
+#### Reset the queue (remove all workers and jobs)
 
 	python cmdQueue.py reset
 	
-* Reset job status (set the status of all jobs to PENDING)
+#### Reset job status (set the status of all jobs to PENDING)
 
 	python cmdQueue.py resetjobs
 	
-* Setup queue (create the database and tables)
+#### Setup queue (create the database and tables)
 
 	python cmdQueue.py setup
 	
-* Kill jobs
+#### Kill jobs
 
 	python cmdQueue.py killjob -p PID
 	python cmdQueue.py killjob2 -i JOBID
 	
-* Kill workers
+#### Kill workers
 
 	python cmdQueue.py killworker -p PID
 
@@ -86,15 +86,15 @@ Start a different queue
 -----------------------
 Please use a differnt database file to start a different queue
 
-* Temporary way:
+#### Temporary way:
 
 	python cmdQueue.py --config db=./another.db SUBCOMMAND ...
 	
-* Using configuration file:
+#### Using configuration file:
 
 	python cmdQueue.py --config ./another.config SUBCOMMAND ...
 	
-* Configuration file:
+#### Configuration file:
 
 	[cmdQueue]
 	db=cmdQueue.db  
@@ -111,9 +111,8 @@ Please use a differnt database file to start a different queue
 
 Plugins
 -------------
-plugins are put in the folder "plugins", and named like 'cqp-<PLUGINNAME>[-<PRIORITY>].py'
+plugins are put in the folder "plugins", and named like 'cqp-&lt;PLUGINNAME>[-&lt;PRIORITY>].py'
 Less number PRIORITY is, the higher priority the plugin has (executed before other plugins). 
 
 Check the sample plugin in the folder.
-
 
