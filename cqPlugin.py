@@ -26,19 +26,19 @@ class cqPlugin:
         pfn = re.compile(r"^cqp-(?P<name>.+)-(?P<priority>\d+)\.py$")
         for fn in pps:
             
-            m = pfn0.match(fn)
+            m = pfn.match(fn)
 
             if m:
                 name = m.group('name')
-                priority = 0
+                priority = int(m.group('priority'))
             else:
-                m = pfn.match(fn)
+                m = pfn0.match(fn)
                 if m:
                     name = m.group('name')
-                    priority = int(m.group('priority'))
+                    priority = 0
                 else:
                     continue
-            
+
             info = imp.find_module('cqp-%s-%s' % (name, priority), [self.dir])
 
             plugins.append([priority, name, info])

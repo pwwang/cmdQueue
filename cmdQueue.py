@@ -206,6 +206,7 @@ In config file:\n[cmdQueue]\ndb=test.db\nworkercount=2\ninterval=60\nlogfile=cmd
     parser_add = subparsers.add_parser('add', help='Add a command into the queue')
     parser_add.add_argument('-n', '--name', required=True)
     parser_add.add_argument('-c', '--cmd', required=True)
+    parser_add.add_argument('-p', '--priority', required=True)
     
 
     parser_list = subparsers.add_parser('list', help='List the workers and jobs')
@@ -213,6 +214,15 @@ In config file:\n[cmdQueue]\ndb=test.db\nworkercount=2\ninterval=60\nlogfile=cmd
     parser_list.add_argument('-t', '--to', help='To which date to show the jobs, default: now(%(default)s)', default=cqUtils.ts2ftime())
     parser_list.add_argument('-n', '--number', type=int, help='Limited number of jobs to show, default: %(default)s', default=10)
     parser_list.add_argument('-s', '--status', help='Show jobs with the status (ALL|'+cqStatus.PENDING+'|'+cqStatus.RUNNING+'|'+cqStatus.KILLED+'|'+cqStatus.COMPLETE+'|'+cqStatus.ERROR+', default: %(default)s', default='ALL')
+    
+    parser_listworkers = subparsers.add_parser('listworkers', help='List the workers')
+
+    parser_listjobs = subparsers.add_parser('listjobs', help='List the jobs')
+    parser_listjobs.add_argument('-f', '--frm', help='From which date to show the jobs, default: %(default)s', default=cqUtils.ts2ftime(1))
+    parser_listjobs.add_argument('-t', '--to', help='To which date to show the jobs, default: now(%(default)s)', default=cqUtils.ts2ftime())
+    parser_listjobs.add_argument('-n', '--number', type=int, help='Limited number of jobs to show, default: %(default)s', default=10)
+    parser_listjobs.add_argument('-s', '--status', help='Show jobs with the status (ALL|'+cqStatus.PENDING+'|'+cqStatus.RUNNING+'|'+cqStatus.KILLED+'|'+cqStatus.COMPLETE+'|'+cqStatus.ERROR+', default: %(default)s', default='ALL')
+    
 
     parser_reset = subparsers.add_parser('reset', help='Reset the queue, kill all workers and jobs, and remove them from database')
     parser_reset = subparsers.add_parser('resetjobs', help='Reset all jobs to '+cqStatus.PENDING+' status')
@@ -283,17 +293,25 @@ In config file:\n[cmdQueue]\ndb=test.db\nworkercount=2\ninterval=60\nlogfile=cmd
     plugin = cqPlugin()
     cq = cmdQueue(args)
 
-    cq.checkWorker()
+    if args.command != 'setup':
+        cq.checkWorker()
     
     if args.command == 'add':
         job = {
             'name': args.name,
-            'cmd': args.cmd
+            'cmd': args.cmd,
+            'priority': args.priority
         }
         cq.add(job)
         
     elif args.command == 'list':
         cq.listdb(args.frm, args.to, args.number, args.status)
+
+    elif args.command == 'listworkers':
+        cq.listWorkers()
+
+    elif args.command == 'listjobs':
+        cq.listJobs(args.frm, args.to, args.number, args.status)
 
     elif args.command == 'setup':
         cq.setup()
