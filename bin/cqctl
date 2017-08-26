@@ -1,0 +1,37 @@
+#!/usr/bin/env python
+import path
+
+import sys
+import argparse
+
+from cmdQueue.cmdQ import cmdq
+
+parser           = argparse.ArgumentParser(description='cmdQueue controller.')
+cmdparsers       = parser.add_subparsers(dest='command')
+parser_start     = cmdparsers.add_parser('start', help="Start the worker.")
+parser_stop      = cmdparsers.add_parser('stop', help="Stop the worker.")
+parser_restart   = cmdparsers.add_parser('restart', help="Restart the worker.")
+parser_archive   = cmdparsers.add_parser('archive', help="Export complete/error jobs and remove them from database.")
+parser_restore   = cmdparsers.add_parser('restore', help="Restore archived jobs to database.")
+parser_archive.add_argument('-o', '--output', help = 'The output file to save the archived jobs.', required = True)
+parser_restore.add_argument('-i', '--input', help = 'The archived jobs.', required = True)
+args             = parser.parse_args()
+
+
+if args.command == 'start':
+	cmdq.startWorker()
+	
+elif args.command == 'stop':
+	cmdq.stopWorker()
+	
+elif args.command == 'restart':
+	cmdq.stopWorker()
+	cmdq.startWorker()
+	
+elif args.command == 'archive':
+	cmdq.archive(cmdq.output)
+	
+elif cmd == 'restore':
+	cmdq.restore(args.input)
+	
+	

@@ -1,0 +1,58 @@
+#!/usr/bin/env python
+import path
+
+import multiprocessing, time
+
+try:
+	from Queue import Queue
+except ImportError:
+	from queue import Queue
+	
+from cmdQueue.Config import config
+from cmdQueue.cmdQ import cmdq
+from cmdQueue.Job import Job
+from cmdQueue.Utils import getLogger
+
+logger = getLogger(logfile = config.log.file, loglevel = config.log.level, stream = False)
+
+def worker(q):
+		"""
+		The worker to run jobs with multiprocessing
+		@params:
+			`q`: The multiprocessing.JoinableQueue
+		"""
+		while True:
+			wait = False
+			if q.empty(): 
+				wait = True
+			else:
+				try:
+					jobattrs = q.get()
+				except:
+					wait = True
+				if jobattrs is None: 
+					wait = True
+			if wait:
+				time.sleep(config.general.interval)
+				continue
+				
+			job = Job(cmdq.model, **jobattrs)
+			job.run()
+			q.task_done()
+
+q = multiprocessing.JoinableQueue()
+for i in range(config.general.workers):
+	proc = multiprocessing.Process(target = worker, args=(q, ))
+	proc.daemon = True
+	proc.start()
+	
+while True:
+	jobs = cmdq.model.getJobsByStatus([cmdq.model.STATUS['submitted']])
+	if jobs:
+		logger.info('%s jobs pulled.' % len(jobs))
+	for job in jobs:
+		job['status'] = cmdq.model.STATUS['pending']
+		q.put(job)
+	cmdq.model.updateJobs(jobs)
+	time.sleep(config.general.interval)
+	
