@@ -3,35 +3,49 @@ import path
 
 import sys
 import argparse
+from os import path
 
-from cmdQueue.cmdQ import cmdq
+from cmdQueue.cmdq import cmdQ
+from cmdQueue.utils import getLogger
 
-parser           = argparse.ArgumentParser(description='cmdQueue controller.')
-cmdparsers       = parser.add_subparsers(dest='command')
-parser_start     = cmdparsers.add_parser('start', help="Start the worker.")
-parser_stop      = cmdparsers.add_parser('stop', help="Stop the worker.")
-parser_restart   = cmdparsers.add_parser('restart', help="Restart the worker.")
-parser_archive   = cmdparsers.add_parser('archive', help="Export complete/error jobs and remove them from database.")
-parser_restore   = cmdparsers.add_parser('restore', help="Restore archived jobs to database.")
-parser_archive.add_argument('-o', '--output', help = 'The output file to save the archived jobs.', required = True)
-parser_restore.add_argument('-i', '--input', help = 'The archived jobs.', required = True)
-args             = parser.parse_args()
+if __name__ == '__main__':
+	parser           = argparse.ArgumentParser(description='cmdQueue controller.')
+	parser.add_argument('--config', help = 'The configuration file.', default=path.expanduser('~/.cmdQueue/cmdQueue.conf'))
+	cmdparsers       = parser.add_subparsers(dest='command')
+	parser_start     = cmdparsers.add_parser('start', help="Start the worker.")
+	parser_stop      = cmdparsers.add_parser('stop', help="Stop the worker.")
+	parser_restart   = cmdparsers.add_parser('restart', help="Restart the worker.")
+	parser_archive   = cmdparsers.add_parser('archive', help="Export complete/error jobs and remove them from database.")
+	parser_restore   = cmdparsers.add_parser('restore', help="Restore archived jobs to database.")
+	parser_reset     = cmdparsers.add_parser('reset', help="Reset the queue.")
+	parser_archive.add_argument('-o', '--output', help = 'The output file to save the archived jobs.', required = True)
+	parser_restore.add_argument('-i', '--input', help = 'The archived jobs.', required = True)
+	args             = parser.parse_args()
+	
+	cmdq = cmdQ (args.config)
+	getLogger(logfile = cmdq.config.log.file, loglevel = cmdq.config.log.level, stream = True)
 
-
-if args.command == 'start':
-	cmdq.startWorker()
+	if args.command == 'start':
+		cmdq.startWorker()
+		
+	elif args.command == 'stop':
+		cmdq.stopWorker()
+		
+	elif args.command == 'restart':
+		cmdq.stopWorker()
+		cmdq.startWorker()
+		
+	elif args.command == 'archive':
+		cmdq.archive(args.output)
+		
+	elif args.command == 'restore':
+		cmdq.restore(args.input)
 	
-elif args.command == 'stop':
-	cmdq.stopWorker()
-	
-elif args.command == 'restart':
-	cmdq.stopWorker()
-	cmdq.startWorker()
-	
-elif args.command == 'archive':
-	cmdq.archive(cmdq.output)
-	
-elif cmd == 'restore':
-	cmdq.restore(args.input)
-	
-	
+	elif args.command == 'reset':
+		ans = ['', 'Y', 'y', 'N', 'n']
+		msg = 'This will stop the workers, and delete the database and log file.\nAre you sure? [Y/n]'
+		an  = raw_input(msg)
+		while an not in ans:
+			an  = raw_input(msg)
+		if an in ['', 'Y', 'y']:
+			cmdq.reset()

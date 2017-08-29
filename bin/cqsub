@@ -2,39 +2,50 @@
 import path 
 
 import argparse, sys
-from cmdQueue.cmdQ import cmdq, logger
-from cmdQueue.Job import Job
+from os import path
+from cmdQueue.cmdq import cmdQ
+from cmdQueue.job import Job
+from cmdQueue.utils import getLogger
 
 try:
 	from ConfigParser import ConfigParser
 except ImportError:
 	# Python 2 and 3 (after ``pip install configparser``):
 	from configparser import ConfigParser
-	
-parser           = argparse.ArgumentParser(description='Submit a job to cmdQueue.')
-parser.add_argument('-n', '--name', help = 'The name of the job.', required = False)
-parser.add_argument('-p', '--pri', help = 'The priority of the job.', required = False, default = 0, type=int)
-parser.add_argument('-c', '--cmd', help = 'The command of the job', required = False)
-args             = parser.parse_args()
 
-CQFILE_SECTION = 'cmdQueueJob'
+if __name__ == '__main__':
+	parser           = argparse.ArgumentParser(description='Submit a job to cmdQueue.')
+	parser.add_argument('--config', help = 'The configuration file.', default=path.expanduser('~/.cmdQueue/cmdQueue.conf'))
+	parser.add_argument('--noworker', help = 'Don\'t try to start the worker.', action="store_true")
+	parser.add_argument('-n', '--name', help = 'The name of the job.', required = False)
+	parser.add_argument('-p', '--pri', help = 'The priority of the job.', required = False, default = 0, type=int)
+	parser.add_argument('-c', '--cmd', help = 'The command of the job', required = False)
+	parser.add_argument('cqfile', nargs='?', help = 'The cmdQueue job file.')
+	args             = parser.parse_args()
 
-if len(sys.argv) <= 2:
-	sys.stderr.write('Error: you have to submit a job with a cmdQueue file or command (-c, --cmd).\n\n')
-	sys.exit(1)
-	
-if not args.cmd:
-	cp = ConfigParser.ConfigParser()
-	cp.read(sys.argv[1])
-	name = cp.get(CQFILE_SECTION, 'name', '')
-	pri  = cp.get(CQFILE_SECTION, 'pri', 0)
-	cmd  = cp.get(CQFILE_SECTION, 'cmd', '')
-else:
-	name = args.name if args.name else ''
-	pri  = args.pri if args.pri else 0
-	cmd  = args.cmd if args.cmd else ''
-	
-job = Job(cmdq.model, name = name, pri = pri, cmd = cmd)
-jobname = job.submit()
+	CQFILE_SECTION = 'cmdQueueJob'
+	cmdq   = cmdQ(args.config)
 
-logger.info('Job: %s submitted.' % jobname)
+	if not args.cmd and not args.cqfile:
+		sys.stderr.write('Error: you have to submit a job with a cmdQueue job file (cqfile) or command (-c, --cmd).\nType `cqsub -h` to show help information.\n\n')
+		sys.exit(1)
+		
+	if not args.noworker:
+		cmdq.startWorker()
+		
+	if not args.cmd:
+		cp = ConfigParser.ConfigParser()
+		cp.read(sys.argv[1])
+		name = cp.get(CQFILE_SECTION, 'name', '')
+		pri  = cp.get(CQFILE_SECTION, 'pri', 0)
+		cmd  = cp.get(CQFILE_SECTION, 'cmd', '')
+	else:
+		name = args.name if args.name else ''
+		pri  = args.pri if args.pri else 0
+		cmd  = args.cmd if args.cmd else ''
+		
+	job = Job(cmdq, name = name, pri = pri, cmd = cmd)
+	jobname = job.submit()
+
+	logger = getLogger(logfile = cmdq.config.log.file, loglevel = cmdq.config.log.level, stream = True)
+	logger.info('Job: %s submitted.' % jobname)

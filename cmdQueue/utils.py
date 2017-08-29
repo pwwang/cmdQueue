@@ -4,18 +4,22 @@ Utils
 import logging
 from subprocess import Popen
 from os import devnull
-
+import warnings
+	
 def pidIsAlive (pid):
+	warnings.simplefilter("ignore")
 	cmd = ['kill', '-s', '0', str(pid)]
 	with open(devnull, 'w') as f:
 		return Popen(cmd, stdout = f, stderr = f).wait() == 0
 		
 def pidKill (pid):
+	warnings.simplefilter("ignore")
 	cmd = ['kill', '-s', '9', str(pid)]
 	with open(devnull, 'w') as f:
 		return Popen(cmd, stdout = f, stderr = f).wait() == 0
-		
+
 def cmdStart (cmd):
+	warnings.simplefilter("ignore")
 	return Popen(cmd, stdout=None, stderr=None, close_fds=True).pid
 
 def dictUpdate(origDict, newDict):
@@ -27,7 +31,7 @@ def dictUpdate(origDict, newDict):
 	@examples:
 		```python
 		od1 = {"a": {"b": {"c": 1, "d":1}}}
-		od2 = {key:value for key:value in od1.items()}
+		od2 = {key:value for key,value in od1.items()}
 		nd  = {"a": {"b": {"d": 2}}}
 		od1.update(nd)
 		# od1 == {"a": {"b": {"d": 2}}}, od1["a"]["b"] is lost

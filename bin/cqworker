@@ -1,21 +1,46 @@
 #!/usr/bin/env python
 import path
 
-import multiprocessing, time
+import multiprocessing
+import time
+import signal
 
+from os import getpid, path, remove
+from sys import argv, stderr, exit
 try:
 	from Queue import Queue
 except ImportError:
 	from queue import Queue
 	
-from cmdQueue.Config import config
-from cmdQueue.cmdQ import cmdq
-from cmdQueue.Job import Job
-from cmdQueue.Utils import getLogger
+from cmdQueue.cmdq import cmdQ
+from cmdQueue.job import Job
+from cmdQueue.utils import getLogger, pidIsAlive
+from cmdQueue.plugin import Plugin
 
-logger = getLogger(logfile = config.log.file, loglevel = config.log.level, stream = False)
 
-def worker(q):
+if __name__ == '__main__':
+
+	if len(argv) == 1:
+		stderr.write('Error: a config file is needed.\n\n')
+		exit (1)
+
+	cmdq = cmdQ (argv[1])
+	logger   = getLogger(logfile = cmdq.config.log.file, loglevel = cmdq.config.log.level, stream = False)
+	lockfile = cmdq.config.general.workerlock
+
+	if path.exists(lockfile):
+		with open(lockfile) as f:
+			pid, subworkers = f.read().strip().split("\t")
+			subworkersList  = list(map(int, subworkers.split(', ')))
+			if pidIsAlive(pid):
+				logger.warning('Another worker instance is running at: %s, will try to obtain it.' % pid)
+				cmdq.model.updateWorker(pid = pid, workers = subworkersList)
+				exit (1)
+			else:
+				remove(lockfile)
+	
+	
+	def worker(q):
 		"""
 		The worker to run jobs with multiprocessing
 		@params:
@@ -33,26 +58,40 @@ def worker(q):
 				if jobattrs is None: 
 					wait = True
 			if wait:
-				time.sleep(config.general.interval)
+				time.sleep(1)
 				continue
 				
-			job = Job(cmdq.model, **jobattrs)
+			job = Job(cmdq, **jobattrs)
+			Plugin.call(cmdq.plugins, 'onJobStart', job = job)
 			job.run()
+			Plugin.call(cmdq.plugins, 'onJobEnd', job = job)
 			q.task_done()
 
-q = multiprocessing.JoinableQueue()
-for i in range(config.general.workers):
-	proc = multiprocessing.Process(target = worker, args=(q, ))
-	proc.daemon = True
-	proc.start()
-	
-while True:
-	jobs = cmdq.model.getJobsByStatus([cmdq.model.STATUS['submitted']])
-	if jobs:
-		logger.info('%s jobs pulled.' % len(jobs))
-	for job in jobs:
-		job['status'] = cmdq.model.STATUS['pending']
-		q.put(job)
-	cmdq.model.updateJobs(jobs)
-	time.sleep(config.general.interval)
-	
+	subworkers = []
+	q = multiprocessing.JoinableQueue()
+	for i in range(cmdq.config.general.nworkers):
+		proc = multiprocessing.Process(target = worker, args=(q, ))
+		proc.daemon = True
+		proc.start()
+		subworkers.append(proc.pid)
+		
+	subworkersStr = ', '.join(list(map(str, subworkers)))
+	with open(lockfile, 'w') as f:
+		f.write(str(getpid()) + '\t' + subworkersStr)
+		
+	logger.debug('Subworkers started at: %s' % (subworkersStr))
+	cmdq.model.updateWorker(pid = getpid(), workers = subworkers)
+			
+	jobs = cmdq.model.getJobsByStatus([cmdq.model.STATUS['submitted'], cmdq.model.STATUS['pending']])
+	Plugin.call(cmdq.plugins, 'onJobsPulled', jobs = jobs)
+	while True:
+		if jobs:
+			logger.info('%s jobs pulled.' % len(jobs))
+		for job in jobs:
+			job['status'] = cmdq.model.STATUS['pending']
+			q.put(job)
+			Plugin.call(cmdq.plugins, 'onJobEnqueue', job = job)
+		cmdq.model.updateJobs(jobs)
+		time.sleep(cmdq.config.general.interval)
+		jobs = cmdq.model.getJobsByStatus([cmdq.model.STATUS['submitted']])
+		Plugin.call(cmdq.plugins, 'onJobsPulled', jobs = jobs)

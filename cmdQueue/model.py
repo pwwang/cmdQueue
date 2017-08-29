@@ -6,7 +6,8 @@ class Model (object):
 	TABLECOLS_WORKER = OrderedDict([
 		('id'        , 'ID'),
 		('pid'       , 'INT'),
-		('starttime' , 'DATETIME')
+		('starttime' , 'DATETIME'),
+		('workers'   , 'STR')
 	])
 	
 	TABLENAME_JOB = 'cmdq_job'
@@ -26,11 +27,11 @@ class Model (object):
 		'submitted': 'SUBMITTED',
 		'pending'  : 'PENDING',
 		'running'  : 'RUNNING',
-		'complete' : 'COMPELTE',
+		'complete' : 'COMPLETE',
 		'error'    : 'ERROR'
 	}
 	
-	def __init__(self, config):
+	def __init__(self, cmdq):
 		raise NotImplementedError()
 		
 	def createTableIfNotExists(self):
@@ -45,22 +46,22 @@ class Model (object):
 	def getWorkerPid(self):
 		raise NotImplementedError()
 		
-	def updateWorker(self, pid, starttime):
+	def updateWorker(self, pid = None, workers = None):
 		raise NotImplementedError()
 		
-	def deleteFinishedJobs(self):
+	def deleteCompletedJobs(self):
 		raise NotImplementedError()
 		
 	def restoreJobs(self, jobs):
 		raise NotImplementedError()
 		
-	def getJobsByStatus(self, status):
+	def getJobsByStatus(self, status = []):
 		raise NotImplementedError()
 		
-	def getJobByName(self, name):
+	def getJobsByName(self, name):
 		raise NotImplementedError()
 		
-	def getJobByPid(self, pid):
+	def getJobsByPid(self, pid):
 		raise NotImplementedError()
 		
 	def updateJobs (self, jobs):
@@ -69,5 +70,6 @@ class Model (object):
 	def addJob(self, job):
 		raise NotImplementedError()
 		
-	def __del__(self):
+	def reset(self):
 		raise NotImplementedError()
+	
