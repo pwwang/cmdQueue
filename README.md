@@ -1,118 +1,121 @@
 cmdQueue
 ========
 
-A job queue implemented in Python and sqlite3
-Avaible on windows and *nix (maybe OSX, not tested)
+A job queue implemented in Python
 
 
 Usage
 -----
 
 #### Add a job:
+```bash
+usage: cqsub [-h] [--config CONFIG] [--noworker] [-n NAME] [-p PRI] [-c CMD]
+             [cqfile]
 
-	usage: cmdQueue.py add [-h] -n NAME -c CMD
+Submit a job to cmdQueue.
 
-	optional arguments:
-	  -h, --help            show this help message and exit
-	  -n NAME, --name NAME
-	  -c CMD, --cmd CMD
+positional arguments:
+  cqfile                The cmdQueue job file.
 
-#### List workers and jobs:
+optional arguments:
+  -h, --help            show this help message and exit
+  --config CONFIG       The configuration file.
+  --noworker            Don't try to start the worker.
+  -n NAME, --name NAME  The name of the job.
+  -p PRI, --pri PRI     The priority of the job.
+  -c CMD, --cmd CMD     The command of the job
+```
 
-	$ python cmdQueue.py list
-	! Workers
-	! #   PID    Paused?  StartDate
-	1     8388   0        2014-09-08 08:16:52
-	2     4116   0        2014-09-08 08:16:52
-	3     5680   0        2014-09-08 08:16:52
-	4     4328   0        2014-09-08 08:16:52
-	5     6660   0        2014-09-08 08:16:52
+#### List jobs:
 
-	! Jobs
-	! #   Name       Pid    Status     Priority   SubmitDate             StartDate              FinishDate             Command
-	17    Test       10216  COMPLETE   0          2014-09-07 03:48:40    2014-09-08 07:50:06    2014-09-08 07:50:26    php -r "sleep(20);"
-	15    Test       2468   COMPLETE   0          2014-09-07 03:48:39    2014-09-08 07:50:03    2014-09-08 07:50:23    php -r "sleep(20);"
-	16    Test       5816   COMPLETE   0          2014-09-07 03:48:39    2014-09-08 07:50:05    2014-09-08 07:50:26    php -r "sleep(20);"
-	14    Test       9060   COMPLETE   0          2014-09-07 03:48:38    2014-09-08 07:49:45    2014-09-08 07:50:05    php -r "sleep(20);"
-	12    Test       7268   COMPLETE   0          2014-09-07 03:48:37    2014-09-08 07:49:42    2014-09-08 07:50:03    php -r "sleep(20);"
-	13    Test       2072   COMPLETE   0          2014-09-07 03:48:37    2014-09-08 07:49:45    2014-09-08 07:50:05    php -r "sleep(20);"
-	11    Test       7340   COMPLETE   0          2014-09-07 03:48:36    2014-09-08 07:49:25    2014-09-08 07:49:45    php -r "sleep(20);"
-	10    Test       5504   COMPLETE   0          2014-09-07 03:48:35    2014-09-08 07:49:22    2014-09-08 07:49:42    php -r "sleep(20);"
-	9     Test       3612   COMPLETE   0          2014-09-07 03:48:32    2014-09-08 07:49:21    2014-09-08 07:49:42    php -r "sleep(20);"
-	8     Test       8288   COMPLETE   0          2014-09-07 03:45:06    2014-09-08 07:49:05    2014-09-08 07:49:25    php -r "sleep(20);"
+```bash
+cqstat 
+
+  ID    NAME     STATUS   PRI                 CMD     PID   RC             STARTTIME            SUBMITTIME          COMPLETETIME 
+----+-------+----------+-----+-------------------+-------+----+---------------------+---------------------+---------------------
+   1   Job-1   COMPLETE     0   bash -c "sleep 3"   66448    0   2017-08-29 14:44:46   2017-08-29 14:44:41   2017-08-29 14:44:49
+   2   Job-2   COMPLETE     0   bash -c "sleep 3"   66554    0   2017-08-29 14:45:36   2017-08-29 14:45:31   2017-08-29 14:45:39
+   3   Job-3   COMPLETE     0   bash -c "sleep 3"   66594    0   2017-08-29 14:46:06   2017-08-29 14:45:56   2017-08-29 14:46:09
+   4   Job-4   COMPLETE     0   bash -c "sleep 3"   66783    0   2017-08-29 14:46:46   2017-08-29 14:46:37   2017-08-29 14:46:49
+   5   Job-5   COMPLETE     0   bash -c "sleep 3"   66814    0   2017-08-29 14:47:26   2017-08-29 14:47:17   2017-08-29 14:47:29
+   6   Job-6   COMPLETE     0            sleep 10   15282    0   2017-08-29 16:08:24   2017-08-29 16:08:19   2017-08-29 16:08:34
+
+Jobs: COMPLETE: 6
+Worker is not running.
+Number of subworkers: 10.
+Jobs are pulled every 10 seconds.
+
+```
 
 #### Start the queue:
-
-	python cmdQueue.py start
+```bash
+cqctl start
+```
 	
 #### Stop the queue:
-
-	python cmdQueue.py stop
+```bash
+cqctl stop
+```
 	
 #### Restart the queue:
+```bash
+cqctl restart
+```
 
-	python cmdQueue.py restart
-	
-#### Pause a worker:
-
-	python cmdQueue.py pause -p PID
-	
-#### Resume a worker:
-
-	python cmdQueue.py resume -p PID
-	
 #### Reset the queue (remove all workers and jobs)
-
-	python cmdQueue.py reset
-	
-#### Reset job status (set the status of all jobs to PENDING)
-
-	python cmdQueue.py resetjobs
-	
-#### Setup queue (create the database and tables)
-
-	python cmdQueue.py setup
-	
-#### Kill jobs
-
-	python cmdQueue.py killjob -p PID
-	python cmdQueue.py killjob2 -i JOBID
-	
-#### Kill workers
-
-	python cmdQueue.py killworker -p PID
+```bash
+cqctl reset
+```
 
 Start a different queue
 -----------------------
-Please use a differnt database file to start a different queue
 
-#### Temporary way:
-
-	python cmdQueue.py --config db=./another.db SUBCOMMAND ...
-	
 #### Using configuration file:
-
-	python cmdQueue.py --config ./another.config SUBCOMMAND ...
+```bash
+cqctl --config <anotherConfigFile> start
+```
 	
 #### Configuration file:
+```ini
 
-	[cmdQueue]
-	db=cmdQueue.db  
-	; the database file    
-	workercount=5
-	; how many workers to run at the same time
-	interval=60
-	; how frequently to check new jobs if all jobs done
-	logfile=cmdQueue.log
-	; the log file
-	loglevel=INFO
-	; the log level
+[general]
+nworkers  = 10 
+interval = 10
+database = sqlite
+workerlock = ~/.cmdQueue/cmdQueue.worker.lock
+plugins = sample
+
+[log] 
+file = ~/.cmdQueue/cmdQueue.log
+level = info
+
+[dbconfig]
+file = ~/.cmdQueue/cmdQueue.db
+lock = ~/.cmdQueue/cmdQueue.db.lock
+```
 
 
 Plugins
 -------------
-plugins are put in the folder "plugins", and named like 'cqp-&lt;PLUGINNAME>[-&lt;PRIORITY>].py'
-Less number PRIORITY is, the higher priority the plugin has (executed before other plugins). 
+To enable a built-in plugin in `cmdQueue/plugins`, just put the name in config file under:
+```
+[general]
+plugins:
+  plugin1
+  plugin2
+```
 
-Check the sample plugin in the folder.
+To develop a plugin, write a class extends `cmdQueue.plugin.Plugin`.
+In the config file, specify the directory of the plugin file:
+```
+[general]
+plugins:
+	myplugin
+	
+[mypluginPlugin]
+dir: /path/to/myplugin
+```
+There should be a `myplugin.py` under `/path/to/myplugin`
+The class name should be `mypluginPlugin`
 
+The `priority` argument determines the order of multiple plugins. Smaller number means higher priority.
