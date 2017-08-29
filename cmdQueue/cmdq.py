@@ -1,6 +1,6 @@
 from os import path, remove
 from importlib import import_module
-from sys import executable, path as syspath
+from sys import executable, path as syspath, argv
 from time import sleep
 from .config import Config
 from .plugin import Plugin
@@ -20,7 +20,7 @@ class cmdQ (object):
 			for msg in msgs:
 				self.logger.info (msg)
 		
-		self.workerbin = [path.join(path.dirname(path.dirname(path.realpath(__file__))), 'bin', 'cqworker'), configfile]
+		self.workerbin = [path.join(path.dirname(path.realpath(argv[0])), 'cqworker'), configfile]
 		self.workerpid, self.workers = self.model.getWorkerPid()
 		
 		self.plugins = self.getPlugins()
